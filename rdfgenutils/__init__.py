@@ -100,3 +100,49 @@ def ntencode(unicode_data, encoding="ascii"):
         except UnicodeError:
             chars.append('\u%04X' % ord(char))
     return ''.join(chars)
+    
+def triple(s, p, o, lang_or_dt=''):
+  ret = ''
+  if s.startswith('http'):
+    ret += '<%s>' % s
+  else:
+    ret += s
+  
+  ret += ' '
+  if p =='a':
+    ret += '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'
+  elif p.startswith('rdf:'):
+    ret += '<http://www.w3.org/1999/02/22-rdf-syntax-ns#%s>' % p[4:]
+  elif p.startswith('rdfs:'):
+    ret += '<http://www.w3.org/2000/01/rdf-schema#%s>' % p[5:]
+  elif p.startswith('owl:'):
+    ret += '<http://www.w3.org/2002/07/owl#%s>' % p[4:]
+  elif p.startswith('dc:'):
+    ret += '<http://purl.org/dc/terms/%s>' % p[3:]
+  elif p.startswith('ov:'):
+    ret += '<http://open.vocab.org/terms/%s>' % p[3:]
+  elif p.startswith('foaf:'):
+    ret += '<http://xmlns.com/foaf/0.1/%s>' % p[5:]
+  elif p.startswith('geo:'):
+    ret += '<http://www.w3.org/2003/01/geo/wgs84_pos#%s>' % p[4:]
+  elif p.startswith('skos:'):
+    ret += '<http://www.w3.org/2004/02/skos/core#%s>' % p[5:]
+  else:
+    ret += '<%s>' % p
+  
+  ret += ' '
+  if o.startswith('http'):
+    ret += '<%s>' % o
+  elif o.startswith('_:'):
+    ret += '%s' % o
+  else:
+    ret += '"%s"' % o.replace('"', r'\"')
+    
+    if lang_or_dt:
+      if lang_or_dt.startswith('xsd:'):
+        ret += '^^<http://www.w3.org/2001/XMLSchema#%s>' % lang_or_dt[4:]
+      elif lang_or_dt.isalpha():
+        ret += '@%s' % lang_or_dt
+    
+  ret += " .\n"
+  return ret    
