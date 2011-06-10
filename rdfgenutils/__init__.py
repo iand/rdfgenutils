@@ -75,3 +75,28 @@ def is_uri(data):
   else:
     return False
 
+def literal(data):
+  return re.sub(r'"', r'\\"', ntencode(data))
+
+def ntencode(unicode_data, encoding="ascii"):
+  #return unicode_data.encode(encoding,'ignore') # TODO: remove shortcut
+  
+  """Emulate Python 2.3's 'xmlcharrefreplace' encoding error handler."""
+  chars = []
+
+  # nothing to do about xmlchars, but replace newlines with escapes: 
+  unicode_data=unicode_data.replace("\n","\\n")
+
+  try:
+    encoded = unicode_data.encode(encoding, 'strict')
+    return encoded
+  except UnicodeError:
+
+    # Step through the unicode_data string one character at a time in
+    # order to catch unencodable characters:
+    for char in unicode_data:
+        try:
+            chars.append(char.encode(encoding, 'strict'))
+        except UnicodeError:
+            chars.append('\u%04X' % ord(char))
+    return ''.join(chars)
