@@ -76,7 +76,7 @@ def is_uri(data):
     return False
 
 def literal(data):
-  return re.sub(r'"', r'\\"', ntencode(data))
+  return ntencode(re.sub(r'"', r'\\"', re.sub(r'\\', r'\\\\', data)))
 
 def ntencode(unicode_data, encoding="ascii"):
   #return unicode_data.encode(encoding,'ignore') # TODO: remove shortcut
@@ -136,7 +136,7 @@ def triple(s, p, o, lang_or_dt=''):
   elif o.startswith('_:'):
     ret += '%s' % o
   else:
-    ret += '"%s"' % o.replace('"', r'\"')
+    ret += '"%s"' % literal(o.replace('"', r'\"'))
     
     if lang_or_dt:
       if lang_or_dt.startswith('xsd:'):
