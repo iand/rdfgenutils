@@ -131,7 +131,7 @@ def triple(s, p, o, lang_or_dt=''):
     ret += '<%s>' % p
   
   ret += ' '
-  if o.startswith('http'):
+  if o.startswith('http') and lang_or_dt != 'xsd:string':
     ret += '<%s>' % o
   elif o.startswith('_:'):
     ret += '%s' % o
