@@ -1,7 +1,7 @@
 # Text utilities
 import re
 import htmlentitydefs
-
+import time
 url_re = re.compile(
     r'^https?://' # http:// or https://
     r'(?:(?:[A-Z0-9]+(?:-*[A-Z0-9]+)*\.)+[A-Z]{2,6}|' #domain...
@@ -104,7 +104,7 @@ def ntencode(unicode_data, encoding="ascii"):
 def triple(s, p, o, lang_or_dt=''):
   ret = ''
   if s.startswith('http'):
-    ret += '<%s>' % s
+    ret += '<%s>' % clean_uri(s)
   else:
     ret += s
   
@@ -132,7 +132,7 @@ def triple(s, p, o, lang_or_dt=''):
   
   ret += ' '
   if o.startswith('http') and lang_or_dt != 'xsd:string':
-    ret += '<%s>' % o
+    ret += '<%s>' % clean_uri(o)
   elif o.startswith('_:'):
     ret += '%s' % o
   else:
@@ -146,3 +146,54 @@ def triple(s, p, o, lang_or_dt=''):
     
   ret += " .\n"
   return ret    
+
+
+def kasabi_reset(dataset):
+  """Reset a kasabi daaaset. Expects a pytassium Dataset instance as a parameter. Will print to console"""
+  job_uri = dataset.schedule_reset()
+  print "Reset scheduled, URI is: %s" % job_uri
+  done = False
+  while not done:
+    response, data = dataset.job_status(job_uri)
+    if response.status in range(200,300):
+      if data['status'] == 'scheduled':
+        print "Reset has not started yet"
+      elif data['status'] == 'running':
+        print "Reset is in progress"
+      elif data['status'] == 'failed':
+        print "Reset has failed"
+        done = True
+      elif data['status'] == 'succeeded':
+        print "Reset has completed"
+        done = True
+
+    if not done:
+      time.sleep(5)
+
+
+def kasabi_store(dataset, filename):
+  """Load a file of ntriples into a Kasabi dataset. Expects a pytassium Dataset instance as a parameter. Will print to console"""
+  print "Uploading '%s'" % filename
+  
+  if not os.path.isfile(filename):
+    print "%s is not a valid filename" % filename
+    return
+
+  if os.path.getsize(filename) < 2000000:
+    dataset.store_file(filename)
+  elif filename.endswith('.nt'):
+    content_type = 'text/turtle'
+    
+    chunk = 1
+    data = ''
+    f = open(filename, 'r')
+    for line in f:
+      data += line
+      if len(data) >= 2000000:
+        print "Storing chunk %s of %s (%s bytes)" % (chunk, filename, len(data))
+        dataset.store_data(data, None, content_type)
+        chunk += 1
+        data = ''
+    f.close()    
+  else:
+    print "File is too large. Convert to ntriples for automatic chunking"
