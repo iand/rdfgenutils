@@ -2,6 +2,8 @@
 import re
 import htmlentitydefs
 import time
+from os.path import isfile, getsize
+
 url_re = re.compile(
     r'^https?://' # http:// or https://
     r'(?:(?:[A-Z0-9]+(?:-*[A-Z0-9]+)*\.)+[A-Z]{2,6}|' #domain...
@@ -149,38 +151,49 @@ def triple(s, p, o, lang_or_dt=''):
 
 
 def kasabi_reset(dataset):
-  """Reset a kasabi daaaset. Expects a pytassium Dataset instance as a parameter. Will print to console"""
-  job_uri = dataset.schedule_reset()
-  print "Reset scheduled, URI is: %s" % job_uri
-  done = False
-  while not done:
-    response, data = dataset.job_status(job_uri)
-    if response.status in range(200,300):
-      if data['status'] == 'scheduled':
-        print "Reset has not started yet"
-      elif data['status'] == 'running':
-        print "Reset is in progress"
-      elif data['status'] == 'failed':
-        print "Reset has failed"
-        done = True
-      elif data['status'] == 'succeeded':
-        print "Reset has completed"
-        done = True
+  """Reset a kasabi dataset. Expects a pytassium Dataset instance as a parameter. Will print to console"""
+  response, job_uri = dataset.schedule_reset()
+  if response.status in range(200, 300):
+    print "Reset scheduled, URI is: %s" % job_uri
+    done = False
+    while not done:
+      response, data = dataset.job_status(job_uri)
+      if response.status in range(200,300):
+        if data['status'] == 'scheduled':
+          print "Reset has not started yet"
+        elif data['status'] == 'running':
+          print "Reset is in progress"
+        elif data['status'] == 'failed':
+          print "Reset has failed"
+          done = True
+        elif data['status'] == 'succeeded':
+          print "Reset has completed"
+          done = True
 
-    if not done:
-      time.sleep(5)
-
+      if not done:
+        time.sleep(5)
+  else:
+    print "Request failed: %d %s - %s" % (response.status, response.reason, job_uri)
+    if 'x-talis-response-id' in response:
+      print "x-talis-response-id: %s" % response['x-talis-response-id']
+    
 
 def kasabi_store(dataset, filename):
   """Load a file of ntriples into a Kasabi dataset. Expects a pytassium Dataset instance as a parameter. Will print to console"""
   print "Uploading '%s'" % filename
   
-  if not os.path.isfile(filename):
+  if not isfile(filename):
     print "%s is not a valid filename" % filename
     return
 
-  if os.path.getsize(filename) < 2000000:
-    dataset.store_file(filename)
+  file_size = getsize(filename)
+  if file_size < 2000000:
+    response, data = dataset.store_file(filename)
+    if not response.status in range(200, 300):
+      print "Request failed: %d %s - %s" % (response.status, response.reason, data)
+      if 'x-talis-response-id' in response:
+        print "x-talis-response-id: %s" % response['x-talis-response-id']
+      
   elif filename.endswith('.nt'):
     content_type = 'text/turtle'
     
@@ -190,8 +203,13 @@ def kasabi_store(dataset, filename):
     for line in f:
       data += line
       if len(data) >= 2000000:
-        print "Storing chunk %s of %s (%s bytes)" % (chunk, filename, len(data))
-        dataset.store_data(data, None, content_type)
+        print "Storing chunk %s/%s of %s (%s bytes)" % (chunk, str(int(file_size/2000000) + 1), filename, len(data))
+        response, data = dataset.store_data(data, None, content_type)
+        if not response.status in range(200, 300):
+          print "Request failed: %d %s - %s" % (response.status, response.reason, data)
+          if 'x-talis-response-id' in response:
+            print "x-talis-response-id: %s" % response['x-talis-response-id']
+          return
         chunk += 1
         data = ''
     f.close()    
