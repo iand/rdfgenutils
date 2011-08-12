@@ -1,5 +1,5 @@
 # 2011-08-12 Kier Davis <kierdavis@gmail.com>
-#   Added namespace manager class and singleton.
+#   Added simple Namespace class.
 
 # Text utilities
 import re
@@ -15,27 +15,22 @@ url_re = re.compile(
     r'(?::\d+)?' # optional port
     r'(?:/?|/\S+)$', re.IGNORECASE)
 
-class NamespaceManagerClass(object):
-  def __init__(self):
-    self.namespace_map = {
-      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-      "owl": "http://www.w3.org/2002/07/owl#",
-      "dc": "http://purl.org/dc/elements/1.1/",
-      "dct": "http://purl.org/dc/terms/",
-      "ov": "http://open.vocab.org/terms/",
-      "foaf": "http://xmlns.com/foaf/0.1/",
-      "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#",
-      "skos": "http://www.w3.org/2004/02/skos/core#",
-    }
+class Namespace(object):
+  def __init__(self, uri):
+    self._uri = uri
   
-  def add(self, name, uri):
-    self.namespace_map[name] = uri
-  
-  def get(self, name):
-    return self.namespace_map[name]
+  def __getitem__(self, name):
+    return self._uri + name
 
-NamespaceManager = NamespaceManagerClass()
+RDF = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+RDFS = Namespace("http://www.w3.org/2000/01/rdf-schema#")
+OWL = Namespace("http://www.w3.org/2002/07/owl#")
+DC = Namespace("http://purl.org/dc/elements/1.1/")
+DCT = Namespace("http://purl.org/dc/terms/")
+OV = Namespace("http://open.vocab.org/terms/")
+FOAF = Namespace("http://xmlns.com/foaf/0.1/")
+GEO = Namespace("http://www.w3.org/2003/01/geo/wgs84_pos#")
+SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 
 def slugify(str):
   removelist = ["a", "an", "as", "at", "before", "but", "by", "for","from","is", "in", "into", "like", "of", "off", "on", "onto","per","since", "than", "the", "this", "that", "to", "up", "via","with"];
@@ -138,11 +133,8 @@ def triple(s, p, o, lang_or_dt=''):
   ret += ' '
   if p == 'a':
     ret += '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'
-  elif p.startswith("http"):
+  else:
     ret += '<%s>' % p
-  elif ":" in p:
-    x, y = p.split(":")
-    ret += "<%s%s>" % (NamespaceManager.get(x), y)
   
   ret += ' '
   if o.startswith('http') and lang_or_dt != 'xsd:string':
