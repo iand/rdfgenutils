@@ -1,3 +1,6 @@
+# 2011-08-12 Kier Davis <kierdavis@gmail.com>
+#   Added simple Namespace class.
+
 # Text utilities
 import re
 import htmlentitydefs
@@ -11,6 +14,23 @@ url_re = re.compile(
     r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
     r'(?::\d+)?' # optional port
     r'(?:/?|/\S+)$', re.IGNORECASE)
+
+class Namespace(object):
+  def __init__(self, uri):
+    self._uri = uri
+  
+  def __getitem__(self, name):
+    return self._uri + name
+
+RDF = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+RDFS = Namespace("http://www.w3.org/2000/01/rdf-schema#")
+OWL = Namespace("http://www.w3.org/2002/07/owl#")
+DC = Namespace("http://purl.org/dc/elements/1.1/")
+DCT = Namespace("http://purl.org/dc/terms/")
+OV = Namespace("http://open.vocab.org/terms/")
+FOAF = Namespace("http://xmlns.com/foaf/0.1/")
+GEO = Namespace("http://www.w3.org/2003/01/geo/wgs84_pos#")
+SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
 
 def slugify(str):
   removelist = ["a", "an", "as", "at", "before", "but", "by", "for","from","is", "in", "into", "like", "of", "off", "on", "onto","per","since", "than", "the", "this", "that", "to", "up", "via","with"];
@@ -111,24 +131,8 @@ def triple(s, p, o, lang_or_dt=''):
     ret += s
   
   ret += ' '
-  if p =='a':
+  if p == 'a':
     ret += '<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'
-  elif p.startswith('rdf:'):
-    ret += '<http://www.w3.org/1999/02/22-rdf-syntax-ns#%s>' % p[4:]
-  elif p.startswith('rdfs:'):
-    ret += '<http://www.w3.org/2000/01/rdf-schema#%s>' % p[5:]
-  elif p.startswith('owl:'):
-    ret += '<http://www.w3.org/2002/07/owl#%s>' % p[4:]
-  elif p.startswith('dc:'):
-    ret += '<http://purl.org/dc/terms/%s>' % p[3:]
-  elif p.startswith('ov:'):
-    ret += '<http://open.vocab.org/terms/%s>' % p[3:]
-  elif p.startswith('foaf:'):
-    ret += '<http://xmlns.com/foaf/0.1/%s>' % p[5:]
-  elif p.startswith('geo:'):
-    ret += '<http://www.w3.org/2003/01/geo/wgs84_pos#%s>' % p[4:]
-  elif p.startswith('skos:'):
-    ret += '<http://www.w3.org/2004/02/skos/core#%s>' % p[5:]
   else:
     ret += '<%s>' % p
   
