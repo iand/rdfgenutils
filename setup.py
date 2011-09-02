@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(
     name = 'rdfgenutils',
-    version = '0.3.3',
+    version = '0.3.4',
     description = 'Some simple functions useful when generating RDF from non-RDF sources.',
     author='Ian Davis',
     author_email='nospam@iandavis.com',
