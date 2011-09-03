@@ -31,7 +31,6 @@ OV = Namespace("http://open.vocab.org/terms/")
 FOAF = Namespace("http://xmlns.com/foaf/0.1/")
 GEO = Namespace("http://www.w3.org/2003/01/geo/wgs84_pos#")
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
-XSD = Namespace("http://www.w3.org/2001/XMLSchema#")
 
 def slugify(str):
   removelist = ["a", "an", "as", "at", "before", "but", "by", "for","from","is", "in", "into", "like", "of", "off", "on", "onto","per","since", "than", "the", "this", "that", "to", "up", "via","with"];
