@@ -31,6 +31,7 @@ OV = Namespace("http://open.vocab.org/terms/")
 FOAF = Namespace("http://xmlns.com/foaf/0.1/")
 GEO = Namespace("http://www.w3.org/2003/01/geo/wgs84_pos#")
 SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
+SCHEMA = Namespace("http://schema.org/")
 
 def slugify(str):
   removelist = ["a", "an", "as", "at", "before", "but", "by", "for","from","is", "in", "into", "like", "of", "off", "on", "onto","per","since", "than", "the", "this", "that", "to", "up", "via","with"];
@@ -138,19 +139,25 @@ def triple(s, p, o, lang_or_dt=''):
     ret += '<%s>' % p
   
   ret += ' '
-  if o.startswith('http') and lang_or_dt != 'xsd:string':
-    ret += '<%s>' % clean_uri(o)
-  elif o.startswith('_:'):
-    ret += '%s' % o
+  if isinstance(o, int):
+    ret += '"%s"^^<http://www.w3.org/2001/XMLSchema#int>' % str(o)
+  elif isinstance(o, float):
+    ret += '"%s"^^<http://www.w3.org/2001/XMLSchema#float>' % str(o)    
   else:
-    ret += '"%s"' % literal(o.replace('"', r'\"'))
-    
-    if lang_or_dt:
-      if lang_or_dt.startswith('xsd:'):
-        ret += '^^<http://www.w3.org/2001/XMLSchema#%s>' % lang_or_dt[4:]
-      elif lang_or_dt.isalpha():
-        ret += '@%s' % lang_or_dt
-    
+    if (o.startswith('http') and lang_or_dt != 'xsd:string') or lang_or_dt == 'xsd:uri':
+      ret += '<%s>' % clean_uri(o)
+    elif o.startswith('_:'):
+      ret += '%s' % o
+    else:
+      ret += '"%s"' % literal(o)
+      
+      if lang_or_dt:
+        if lang_or_dt.startswith('xsd:'):
+          ret += '^^<http://www.w3.org/2001/XMLSchema#%s>' % lang_or_dt[4:]
+        elif lang_or_dt.isalpha():
+          ret += '@%s' % lang_or_dt
+
+
   ret += " .\n"
   return ret    
 
